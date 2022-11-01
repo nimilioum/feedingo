@@ -1,5 +1,13 @@
-from rest_framework.serializers import ModelSerializer, IntegerField
+from rest_framework.serializers import Serializer, ModelSerializer, IntegerField
 from .models import Feed, Article
+
+
+class ArticleSerializer(ModelSerializer):
+    class Meta:
+        model = Article
+        fields = '__all__'
+
+    likes = IntegerField(source='likes_count', read_only=True)
 
 
 class FeedSerializer(ModelSerializer):
@@ -8,12 +16,4 @@ class FeedSerializer(ModelSerializer):
         fields = '__all__'
 
     follows = IntegerField(source='follows.count', read_only=True)
-
-
-class ArticleSerializer(ModelSerializer):
-    class Meta:
-        model = Article
-
-    likes = IntegerField(source='likes.count', read_only=True)
-
-    exclude = ('reads', )
+    articles = ArticleSerializer(many=True, read_only=True, source='article_set')
