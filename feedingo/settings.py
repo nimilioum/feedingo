@@ -44,6 +44,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'drf_yasg',
+    'dj_rest_auth',
+    'dj_rest_auth.registration',
+    'allauth',
 
     'accounts',
     'article',
@@ -128,6 +131,17 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     )
 }
+
+# SWAGGER
+SWAGGER_SETTINGS = {
+      'SECURITY_DEFINITIONS': {
+         'DRF Token': {
+               'type': 'apiKey',
+               'name': 'Authorization',
+               'in': 'header'
+         }
+      }
+   }
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/

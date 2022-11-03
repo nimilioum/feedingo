@@ -34,8 +34,8 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('auth/', include('rest_framework.urls')),
-    path('auth/', include('accounts.urls')),
+    path('auth/', include('dj_rest_auth.urls')),
+    path('auth/', include('dj_rest_auth.registration.urls')),
     path('', include('article.urls')),
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     re_path(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
