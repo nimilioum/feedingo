@@ -17,6 +17,13 @@ class Feed(models.Model):
     def follow(self, user: User):
         self.follows.add(user)
 
+    def set_articles(self, articles):
+        for article in articles:
+            article.feed = self
+
+    def __str__(self):
+        return f'Feed: {self.name} - {self.rss_url}'
+
 
 class Article(ReadMixin,
               LikeMixin,
@@ -29,25 +36,15 @@ class Article(ReadMixin,
     publish_date = models.DateTimeField()
     feed = models.ForeignKey(Feed, on_delete=models.CASCADE)
 
-    # reads = GenericRelation(Read)
-    # likes = GenericRelation(Like)
-    # bookmarks = GenericRelation(Bookmark)
-
     objects = ArticleManager()
 
     def is_read(self, user: User):
         read = Read(user=user)
         self.reads.add(read, bulk=False)
 
-    # def is_liked(self, user: User):
-    #     like = Like(user=user)
-    #     self.likes.add(like, bulk=False)
-
-    # def is_unliked(self, user: User):
-    #     like = Like.objects.get(content_object=self, object_id=self.id, user=user)
-    #     self.likes.
-
     def is_bookmarked(self, user: User):
         bookmark = Bookmark(user=user)
         self.bookmarks.add(bookmark, bulk=False)
 
+    def __str__(self):
+        return f'Article: {self.title} - {self.link}'
