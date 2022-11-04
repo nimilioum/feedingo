@@ -31,7 +31,7 @@ services:
     image: redis:alpine
 
   celery:
-#    restart: always
+    restart: always
     build:
       context: .
     image: "feedingo:latest"
@@ -46,6 +46,7 @@ services:
       - app
 
   celery-beat:
+    restart: always
     build:
       context: .
     image: "feedingo:latest"
