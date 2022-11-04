@@ -17,7 +17,9 @@ class FeedViewTestCase(APITestCase):
 
         self.feeds = []
         for i in range(5):
-            feed = Feed.objects.create(name=f'feed-{i}', description='feed', rss_url=f'https://feed-{i}.com/rss')
+            feed = Feed.objects.create(name=f'feed-{i}', description='feed',
+                                       rss_url=f'https://feed-{i}.com/rss',
+                                       link=f'https://feed-{i}.com')
             self.feeds.append(feed)
 
     def test_access_view_unauthenticated(self):
@@ -106,7 +108,9 @@ class ArticleViewTestCase(APITestCase):
         self.articles = []
 
         for i in range(2):
-            feed = Feed.objects.create(name=f'feed-{i}', description='feed', rss_url=f'https://feed-{i}.com/rss')
+            feed = Feed.objects.create(name=f'feed-{i}', description='feed',
+                                       rss_url=f'https://feed-{i}.com/rss',
+                                       link=f'https://feed-{i}.com')
             self.feeds.append(feed)
 
         for feed in self.feeds:

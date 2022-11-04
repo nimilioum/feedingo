@@ -8,7 +8,6 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework.mixins import RetrieveModelMixin, ListModelMixin
 from activity.views import LikeViewMixin, BookmarkViewMixin
-from utils.exception import FeedFetchFailedException
 from rss.services import RSSParser
 from .models import Feed, Article
 from .serializers import FeedSerializer, ArticleSerializer, FeedAddSerializer
@@ -49,30 +48,23 @@ class FeedViewSet(ModelViewSet):
     @swagger_auto_schema(responses={200: FeedSerializer()})
     def add(self, request):
         serializer = FeedAddSerializer(data=request.data)
-        if serializer.is_valid():
-            link = serializer.validated_data['url']
-            try:
-                parser = RSSParser(link)
-                feed = parser.get_feed()
-                articles = parser.get_articles()
+        serializer.is_valid(raise_exception=True)
+        link = serializer.validated_data['url']
+        feed = Feed.objects.filter(rss_url=link).first()
 
-                feed.save()
+        if feed is None:
+            parser = RSSParser(link)
+            feed = parser.get_feed()
+            articles = parser.get_articles()
 
-                feed.add_articles(articles)
-                Article.objects.bulk_create(articles)
-                feed.article_set.set(articles)
+            feed.save()
+            feed.add_articles(articles)
+            Article.objects.bulk_create(articles)
 
-                return Response(FeedAddSerializer(feed).data)
+            feed.article_set.set(articles)
 
-            except IntegrityError:    # for duplicate rss link
-                feed = Feed.objects.get(rss_url=link)
-                feed.follow(request.user)
-                return Response(FeedAddSerializer(feed).data)
-
-            except FeedFetchFailedException as e:
-                return Response({"msg": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        return Response({"msg": f'{serializer.errors}'}, status=status.HTTP_400_BAD_REQUEST)
+        feed.follow(request.user)
+        return Response(FeedAddSerializer(feed).data)
 
 
 class ArticleViewSet(RetrieveModelMixin,
@@ -94,7 +86,7 @@ class ArticleViewSet(RetrieveModelMixin,
     def feed(self, request, *args, **kwargs):
         feeds = Feed.objects.get_user_feed_ids(request.user)
         articles = Article.objects.get_user_feed_items(request.user, feeds)
-        serializer = self.get_serializer_class()(articles, many=True)
+        serializer = ArticleSerializer(articles, many=True)
         return Response(serializer.data)
 
 

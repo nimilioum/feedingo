@@ -1,7 +1,8 @@
-from django.db import models
+from django.db import models, IntegrityError
 from django.contrib.contenttypes.fields import GenericForeignKey, GenericRelation
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.auth import get_user_model
+from utils.exceptions import DomainException, FeedFetchFailedException
 
 User = get_user_model()
 
@@ -33,8 +34,11 @@ class ReadMixin(models.Model):
     reads = GenericRelation(Read)
 
     def is_read(self, user: User):
-        read = Read(user=user)
-        self.reads.add(read, bulk=False)
+        try:
+            read = Read(user=user)
+            self.reads.add(read, bulk=False)
+        except IntegrityError:
+            raise DomainException('object is already read')
 
 
 class Like(Activity):
@@ -48,13 +52,19 @@ class LikeMixin(models.Model):
     likes = GenericRelation(Like)
 
     def is_liked(self, user: User):
-        like = Like(user=user)
-        self.likes.add(like, bulk=False)
+        try:
+            like = Like(user=user)
+            self.likes.add(like, bulk=False)
+        except IntegrityError:
+            raise DomainException('object is already liked')
 
     def is_unliked(self, user: User):
-        content_type = ContentType.objects.get_for_model(self.__class__)
-        like = Like.objects.get(content_type__pk=content_type.id, object_id=self.id, user=user)
-        self.likes.remove(like)
+        try:
+            content_type = ContentType.objects.get_for_model(self.__class__)
+            like = Like.objects.get(content_type__pk=content_type.id, object_id=self.id, user=user)
+            self.likes.remove(like)
+        except Like.DoesNotExist:
+            raise DomainException('object is not liked')
 
 
 class Bookmark(Activity):
@@ -68,10 +78,16 @@ class BookmarkMixin(models.Model):
     bookmarks = GenericRelation(Bookmark)
 
     def is_bookmarked(self, user: User):
-        bookmark = Bookmark(user=user)
-        self.bookmarks.add(bookmark, bulk=False)
+        try:
+            bookmark = Bookmark(user=user)
+            self.bookmarks.add(bookmark, bulk=False)
+        except IntegrityError:
+            raise DomainException('object is already bookmarked')
 
     def is_unbookmarked(self, user: User):
-        content_type = ContentType.objects.get_for_model(self.__class__)
-        bookmark = Bookmark.objects.get(content_type__pk=content_type.id, object_id=self.id, user=user)
-        self.bookmarks.remove(bookmark)
+        try:
+            content_type = ContentType.objects.get_for_model(self.__class__)
+            bookmark = Bookmark.objects.get(content_type__pk=content_type.id, object_id=self.id, user=user)
+            self.bookmarks.remove(bookmark)
+        except Bookmark.DoesNotExist:
+            raise DomainException('object is not bookmarked')

@@ -1,6 +1,7 @@
-from django.db import models
+from django.db import models, IntegrityError
 from django.contrib.auth import get_user_model
 from activity.models import Read, Like, Bookmark, LikeMixin, ReadMixin, BookmarkMixin
+from utils.exceptions import DomainException
 from .managers import FeedManager, ArticleManager
 
 User = get_user_model()
@@ -9,13 +10,17 @@ User = get_user_model()
 class Feed(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField()
+    link = models.URLField(unique=True, default='https://fake.com')
     rss_url = models.URLField(unique=True)
     follows = models.ManyToManyField(User)
 
     objects = FeedManager()
 
     def follow(self, user: User):
-        self.follows.add(user)
+        try:
+            self.follows.add(user)
+        except IntegrityError:
+            raise DomainException('feed is already followed')
 
     def add_articles(self, articles):
         for article in articles:
@@ -42,9 +47,9 @@ class Article(ReadMixin,
         read = Read(user=user)
         self.reads.add(read, bulk=False)
 
-    def is_bookmarked(self, user: User):
-        bookmark = Bookmark(user=user)
-        self.bookmarks.add(bookmark, bulk=False)
+    # def is_bookmarked(self, user: User):
+    #     bookmark = Bookmark(user=user)
+    #     self.bookmarks.add(bookmark, bulk=False)
 
     def __str__(self):
         return f'Article: {self.title} - {self.link}'
