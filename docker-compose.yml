@@ -4,13 +4,14 @@ services:
   app:
     build:
       context: .
+    image: "feedingo:latest"
     ports:
       - "8000:8000"
     volumes:
       - ./:/app
     command: >
-      sh -c "python3 manage.py migrate &&
-             python3 manage.py wait_for_db &&
+      sh -c "python3 manage.py wait_for_db &&
+             python3 manage.py migrate &&
              python3 manage.py runserver 0.0.0.0:8000"
     env_file:
       - ./.env.docker
@@ -23,15 +24,18 @@ services:
       - ./.env.docker
     volumes:
       - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
 
   redis:
     image: redis:alpine
 
   celery:
-    restart: always
+#    restart: always
     build:
       context: .
-    command: celery -A app worker -l info
+    image: "feedingo:latest"
+    command: celery -A feedingo worker -l info
     volumes:
       - ./:/app
     env_file:
@@ -42,13 +46,17 @@ services:
       - app
 
   celery-beat:
-    build: ./
-    command: celery -A core beat -l info
+    build:
+      context: .
+    image: "feedingo:latest"
+    command: celery -A feedingo beat -l info
     volumes:
       - ./:/app
     env_file:
       - ./.env.docker
     depends_on:
+      - db
       - redis
+      - app
 volumes:
   pgdata:
