@@ -2,6 +2,7 @@ import feedparser
 from django.utils.timezone import datetime
 from time import mktime
 from article.models import Feed, Article
+from utils.exception import FeedFetchFailedException
 
 
 class RSSParser:
@@ -22,14 +23,16 @@ class RSSParser:
 
     def get_feed(self):
         if not self.feed:
-            raise Exception('failed to fetch the feed')
+            raise FeedFetchFailedException()
 
         return Feed(name=self.feed.title,
                     description=self.feed.description,
                     rss_url=self.feed.link)
 
     def get_articles(self):
-        feed = self.get_feed()
+        if not self.feed:
+            raise FeedFetchFailedException()
+
         articles = []
 
         for i in self.articles:

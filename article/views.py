@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework.mixins import RetrieveModelMixin, ListModelMixin
 from activity.views import LikeViewMixin, BookmarkViewMixin
+from utils.exception import FeedFetchFailedException
 from rss.services import RSSParser
 from .models import Feed, Article
 from .serializers import FeedSerializer, ArticleSerializer, FeedAddSerializer
@@ -68,7 +69,7 @@ class FeedViewSet(ModelViewSet):
                 feed.follow(request.user)
                 return Response(FeedAddSerializer(feed).data)
 
-            except Exception as e:
+            except FeedFetchFailedException as e:
                 return Response({"msg": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response({"msg": f'{serializer.errors}'}, status=status.HTTP_400_BAD_REQUEST)
