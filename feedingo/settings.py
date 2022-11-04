@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 
 from pathlib import Path
 import os
+
+from celery.schedules import crontab
 from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -143,6 +145,18 @@ SWAGGER_SETTINGS = {
          }
       }
    }
+
+# CELERY
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL')
+CELERY_RESULT_BACKEND = os.environ.get('CELERY_RESULT_BACKEND')
+
+CELERY_BEAT_SCHEDULE = {
+    "get_feed_entries": {
+        "task": "rss.tasks.get_feed_entries",
+        "schedule": crontab(minute="*/1"),
+    },
+}
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
