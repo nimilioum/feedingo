@@ -1,5 +1,6 @@
 import feedparser
-from django.utils.timezone import datetime
+from datetime import datetime
+from django.utils.timezone import make_aware
 from time import mktime
 from article.models import Feed, Article
 from utils.exceptions import FeedFetchFailedException
@@ -37,7 +38,7 @@ class RSSParser:
         articles = []
 
         for i in self.articles:
-            date = datetime.fromtimestamp(mktime(i.published_parsed))
+            date = make_aware(datetime.fromtimestamp(mktime(i.published_parsed)))
             articles.append(Article(title=i.title,
                                     description=i.description,
                                     author=i.get('author'),
