@@ -33,12 +33,12 @@ class ReadMixin(models.Model):
 
     reads = GenericRelation(Read)
 
-    def is_read(self, user: User):
+    def read(self, user: User):
         try:
             read = Read(user=user)
             self.reads.add(read, bulk=False)
         except IntegrityError:
-            raise DomainException('object is already read')
+            pass
 
 
 class Like(Activity):
@@ -51,14 +51,14 @@ class LikeMixin(models.Model):
 
     likes = GenericRelation(Like)
 
-    def is_liked(self, user: User):
+    def like(self, user: User):
         try:
             like = Like(user=user)
             self.likes.add(like, bulk=False)
         except IntegrityError:
             raise DomainException('object is already liked')
 
-    def is_unliked(self, user: User):
+    def unlike(self, user: User):
         try:
             content_type = ContentType.objects.get_for_model(self.__class__)
             like = Like.objects.get(content_type__pk=content_type.id, object_id=self.id, user=user)
@@ -77,17 +77,32 @@ class BookmarkMixin(models.Model):
 
     bookmarks = GenericRelation(Bookmark)
 
-    def is_bookmarked(self, user: User):
+    def bookmark(self, user: User):
         try:
             bookmark = Bookmark(user=user)
             self.bookmarks.add(bookmark, bulk=False)
         except IntegrityError:
             raise DomainException('object is already bookmarked')
 
-    def is_unbookmarked(self, user: User):
+    def unbookmark(self, user: User):
         try:
             content_type = ContentType.objects.get_for_model(self.__class__)
             bookmark = Bookmark.objects.get(content_type__pk=content_type.id, object_id=self.id, user=user)
             self.bookmarks.remove(bookmark)
         except Bookmark.DoesNotExist:
             raise DomainException('object is not bookmarked')
+
+
+class Comment(Activity):
+    message = models.TextField()
+
+
+class CommentMixin(models.Model):
+    class Meta:
+        abstract = True
+
+    comments = GenericRelation(Comment)
+
+    def add_comment(self, user: User, message):
+        comment = Comment(user=user, message=message)
+        self.comments.add(comment, bulk=False)

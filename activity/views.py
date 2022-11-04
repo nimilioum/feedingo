@@ -2,54 +2,51 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.viewsets import GenericViewSet
+from .serializers import CommentSerializer
 
 
-class ActivityViewMixin(GenericViewSet):
-    no_serializer_actions = []
+class LikeViewMixin(GenericViewSet):
 
-    def get_serializer_class(self):
-        if self.action in self.no_serializer_actions:
-            return None
-        return self.serializer_class
-
-
-class LikeViewMixin(ActivityViewMixin):
-
-    def __init__(self, *args, **kwargs):
-        self.no_serializer_actions += ['like', 'unlike']
-        super().__init__()
-
-    @action(detail=True, methods=['POST'], )
+    @action(detail=True, methods=['POST'], serializer_class=None)
     def like(self, request, pk=None):
         obj = self.get_object()
-        obj.is_liked(request.user)
+        obj.like(request.user)
 
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=['POST'], )
+    @like.mapping.delete
     def unlike(self, request, pk=None):
         obj = self.get_object()
-        obj.is_unliked(request.user)
+        obj.unlike(request.user)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
-class BookmarkViewMixin(ActivityViewMixin):
+class BookmarkViewMixin(GenericViewSet):
 
-    def __init__(self, *args, **kwargs):
-        self.no_serializer_actions += ['bookmark', 'unbookmark']
-        super().__init__()
-
-    @action(detail=True, methods=['POST'], )
+    @action(detail=True, methods=['POST'], serializer_class=None)
     def bookmark(self, request, pk=None):
         obj = self.get_object()
-        obj.is_bookmarked(request.user)
+        obj.bookmark(request.user)
 
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_201_CREATED)
 
-    @action(detail=True, methods=['POST'], )
+    @bookmark.mapping.delete
     def unbookmark(self, request, pk=None):
         obj = self.get_object()
-        obj.is_unbookmarked(request.user)
+        obj.unbookmark(request.user)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class CommentViewMixin(GenericViewSet):
+
+    @action(detail=True, methods=['POST'], serializer_class=CommentSerializer, url_path='comment')
+    def add_comment(self, request, pk=None):
+        obj = self.get_object()
+        serializer = CommentSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        message = serializer.validated_data['message']
+        obj.add_comment(request.user, message)
+
+        return Response(status=status.HTTP_201_CREATED)

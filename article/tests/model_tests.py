@@ -40,14 +40,14 @@ class ArticleTestCase(TestCase):
         feeds = Feed.objects.get_user_feed_ids(self.user)
         items = Article.objects.get_user_feed_items(self.user, feeds)
 
-        self.article1.is_read(self.user)
+        self.article1.read(self.user)
 
         self.assertEqual(len(items), 1)
         self.assertEqual(items[0].id, self.article2.id)
 
     def test_get_liked_items(self):
-        self.article1.is_liked(self.user)
-        self.article2.is_liked(self.user)
+        self.article1.like(self.user)
+        self.article2.like(self.user)
 
         articles = Article.objects.get_liked_items(self.user)
 
@@ -56,8 +56,8 @@ class ArticleTestCase(TestCase):
         self.assertEqual(articles[1].id, self.article2.id)
 
     def test_get_bookmarked_items(self):
-        self.article2.is_bookmarked(self.user)
-        self.article3.is_bookmarked(self.user)
+        self.article2.bookmark(self.user)
+        self.article3.bookmark(self.user)
 
         articles = Article.objects.get_bookmarked_items(self.user)
 

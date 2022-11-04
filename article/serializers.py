@@ -1,4 +1,5 @@
 from rest_framework.serializers import Serializer, ModelSerializer, IntegerField, URLField
+from activity.serializers import CommentSerializer
 from .models import Feed, Article
 
 
@@ -8,6 +9,7 @@ class ArticleSerializer(ModelSerializer):
         fields = '__all__'
 
     likes = IntegerField(source='likes_count', read_only=True)
+    comments = CommentSerializer(many=True, read_only=True)
 
 
 class FeedSerializer(ModelSerializer):

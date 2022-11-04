@@ -1,6 +1,6 @@
 from django.db import models, IntegrityError
 from django.contrib.auth import get_user_model
-from activity.models import Read, Like, Bookmark, LikeMixin, ReadMixin, BookmarkMixin
+from activity.models import Read, Like, Bookmark, LikeMixin, ReadMixin, BookmarkMixin, CommentMixin
 from utils.exceptions import DomainException
 from .managers import FeedManager, ArticleManager
 
@@ -33,6 +33,7 @@ class Feed(models.Model):
 class Article(ReadMixin,
               LikeMixin,
               BookmarkMixin,
+              CommentMixin,
               models.Model):
     title = models.CharField(max_length=250)
     description = models.TextField()
@@ -42,10 +43,6 @@ class Article(ReadMixin,
     feed = models.ForeignKey(Feed, on_delete=models.CASCADE)
 
     objects = ArticleManager()
-
-    def is_read(self, user: User):
-        read = Read(user=user)
-        self.reads.add(read, bulk=False)
 
     # def is_bookmarked(self, user: User):
     #     bookmark = Bookmark(user=user)

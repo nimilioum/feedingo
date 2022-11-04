@@ -1,13 +1,12 @@
 from django.db import transaction, IntegrityError
 from django.db.models import Count
-from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet, GenericViewSet
 from rest_framework.mixins import RetrieveModelMixin, ListModelMixin
-from activity.views import LikeViewMixin, BookmarkViewMixin
+from activity.views import LikeViewMixin, BookmarkViewMixin, CommentViewMixin
 from rss.services import RSSParser
 from .models import Feed, Article
 from .serializers import FeedSerializer, ArticleSerializer, FeedAddSerializer
@@ -15,7 +14,7 @@ from .permissions import FeedViewPermission
 
 
 class FeedViewSet(ModelViewSet):
-    queryset = Feed.objects.all().annotate(follows_count=Count('follows'))
+    queryset = Feed.objects.all().annotate(follows_count=Count('follows')).prefetch_related('article_set')
     serializer_class = FeedSerializer
     permission_classes = (FeedViewPermission,)
 
@@ -45,7 +44,6 @@ class FeedViewSet(ModelViewSet):
         return Response(serializer.data)
 
     @action(detail=False, methods=['POST', ], serializer_class=FeedSerializer)
-    @swagger_auto_schema(responses={200: FeedSerializer()})
     def add(self, request):
         serializer = FeedAddSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -64,22 +62,22 @@ class FeedViewSet(ModelViewSet):
             feed.article_set.set(articles)
 
         feed.follow(request.user)
-        return Response(FeedAddSerializer(feed).data)
+        return Response(FeedAddSerializer(feed).data, status=status.HTTP_201_CREATED)
 
 
 class ArticleViewSet(RetrieveModelMixin,
                      ListModelMixin,
                      LikeViewMixin,
                      BookmarkViewMixin,
+                     CommentViewMixin,
                      GenericViewSet):
 
-    queryset = Article.objects.all().annotate(likes_count=Count('likes'))
+    queryset = Article.objects.all().annotate(likes_count=Count('likes')).prefetch_related('comments')
     serializer_class = ArticleSerializer
 
-    @transaction.atomic
     def retrieve(self, request, pk=None, *args, **kwargs):
         article = get_object_or_404(self.queryset, pk=pk)
-        article.is_read(request.user)
+        article.read(request.user)
         return super().retrieve(request, args, kwargs)
 
     @action(detail=False, methods=['GET', ])
