@@ -23,13 +23,13 @@ class ArticleTestCase(TestCase):
                                                feed=self.feed2, publish_date=now() - timedelta(200))
 
     def test_get_user_feeds(self):
-        feeds = Feed.objects.get_user_feeds(self.user)
+        feeds = Feed.objects.get_user_feed_ids(self.user)
 
         self.assertEqual(len(feeds), 1)
         self.assertEqual(feeds[0], self.feed1.id)
 
     def test_get_user_feed_items(self):
-        feeds = Feed.objects.get_user_feeds(self.user)
+        feeds = Feed.objects.get_user_feed_ids(self.user)
         items = Article.objects.get_user_feed_items(self.user, feeds)
 
         self.assertEqual(len(items), 2)
@@ -37,7 +37,7 @@ class ArticleTestCase(TestCase):
         self.assertEqual(items[1].id, self.article2.id)
 
     def test_get_user_feed_items_read(self):
-        feeds = Feed.objects.get_user_feeds(self.user)
+        feeds = Feed.objects.get_user_feed_ids(self.user)
         items = Article.objects.get_user_feed_items(self.user, feeds)
 
         self.article1.is_read(self.user)
