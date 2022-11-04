@@ -15,7 +15,7 @@ from .permissions import FeedViewPermission
 
 
 class FeedViewSet(ModelViewSet):
-    queryset = Feed.objects.all().prefetch_related('follows')
+    queryset = Feed.objects.all().annotate(follows_count=Count('follows'))
     serializer_class = FeedSerializer
     permission_classes = (FeedViewPermission,)
 
@@ -38,6 +38,12 @@ class FeedViewSet(ModelViewSet):
             return Response(data={'msg': 'feed is already followed'},
                             status=status.HTTP_400_BAD_REQUEST)
 
+    @action(detail=False, methods=['GET', ])
+    def followed(self, request):
+        queryset = Feed.objects.user_followed(request.user).annotate(follows_count=Count('follows'))
+        serializer = FeedSerializer(queryset, many=True)
+        return Response(serializer.data)
+
     @action(detail=False, methods=['POST', ], serializer_class=FeedSerializer)
     @swagger_auto_schema(responses={200: FeedSerializer()})
     def add(self, request):
@@ -51,7 +57,7 @@ class FeedViewSet(ModelViewSet):
 
                 feed.save()
 
-                feed.set_articles(articles)
+                feed.add_articles(articles)
                 Article.objects.bulk_create(articles)
                 feed.article_set.set(articles)
 
@@ -85,7 +91,7 @@ class ArticleViewSet(RetrieveModelMixin,
 
     @action(detail=False, methods=['GET', ])
     def feed(self, request, *args, **kwargs):
-        feeds = Feed.objects.get_user_feeds(request.user)
+        feeds = Feed.objects.get_user_feed_ids(request.user)
         articles = Article.objects.get_user_feed_items(request.user, feeds)
         serializer = self.get_serializer_class()(articles, many=True)
         return Response(serializer.data)

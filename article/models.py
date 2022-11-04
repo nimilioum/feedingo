@@ -17,7 +17,7 @@ class Feed(models.Model):
     def follow(self, user: User):
         self.follows.add(user)
 
-    def set_articles(self, articles):
+    def add_articles(self, articles):
         for article in articles:
             article.feed = self
 

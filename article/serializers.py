@@ -15,7 +15,7 @@ class FeedSerializer(ModelSerializer):
         model = Feed
         fields = '__all__'
 
-    follows = IntegerField(source='follows.count', read_only=True)
+    follows = IntegerField(source='follows_count', read_only=True)
     articles = ArticleSerializer(many=True, read_only=True, source='article_set')
 
 

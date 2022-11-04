@@ -7,8 +7,11 @@ User = get_user_model()
 
 class FeedManager(models.Manager):
 
-    def get_user_feeds(self, user: User):
+    def get_user_feed_ids(self, user: User):
         return self.filter(follows=user).values_list('id', flat=True)
+
+    def user_followed(self, user: User):
+        return self.filter(follows=user)
 
 
 class ArticleManager(models.Manager):
