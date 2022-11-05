@@ -33,8 +33,6 @@ class FeedViewTestCase(APITestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), len(self.feeds))
-        for i in range(len(response.data)):
-            self.assertEqual(response.data[i]['id'], self.feeds[i].id)
 
     def test_get_field_by_id(self):
         self.client.login(username=self.user1.username, password='randompassword')
@@ -54,13 +52,19 @@ class FeedViewTestCase(APITestCase):
         self.client.login(username=self.user1.username, password='randompassword')
         response = self.client.post(reverse('feeds-add'), data=data)
 
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data['name'], feed.name)
         self.assertEqual(len(response.data['articles']), 0)
 
     def test_follow_feed(self):
         self.client.login(username=self.user1.username, password='randompassword')
         response = self.client.post(reverse('feeds-follow', kwargs={'pk': self.feeds[2].id}))
+
+        self.assertEqual(response.status_code, 201)
+
+    def test_unfollow_feed(self):
+        self.client.login(username=self.user1.username, password='randompassword')
+        response = self.client.delete(reverse('feeds-follow', kwargs={'pk': self.feeds[2].id}))
 
         self.assertEqual(response.status_code, 204)
 

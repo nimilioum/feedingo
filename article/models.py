@@ -22,6 +22,9 @@ class Feed(models.Model):
         except IntegrityError:
             raise DomainException('feed is already followed')
 
+    def unfollow(self, user: User):
+        self.follows.remove(user)
+
     def add_articles(self, articles):
         for article in articles:
             article.feed = self

@@ -1,4 +1,3 @@
-from django.db import transaction, IntegrityError
 from django.db.models import Count
 from rest_framework import status
 from rest_framework.decorators import action
@@ -19,7 +18,7 @@ class FeedViewSet(ModelViewSet):
     permission_classes = (FeedViewPermission,)
 
     def get_serializer_class(self):
-        if self.action in ['follow', ]:
+        if self.action in ['follow', 'unfollow']:
             return None
 
         if self.action == 'add':
@@ -30,12 +29,14 @@ class FeedViewSet(ModelViewSet):
     @action(detail=True, methods=['POST', ])
     def follow(self, request, pk=None):
         feed = get_object_or_404(self.queryset, pk=pk)
-        try:
-            feed.follow(request.user)
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        except IntegrityError:
-            return Response(data={'msg': 'feed is already followed'},
-                            status=status.HTTP_400_BAD_REQUEST)
+        feed.follow(request.user)
+        return Response(status=status.HTTP_201_CREATED)
+
+    @follow.mapping.delete
+    def unfollow(self, request, pk=None):
+        feed = get_object_or_404(self.queryset, pk=pk)
+        feed.unfollow(request.user)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=['GET', ])
     def followed(self, request):
