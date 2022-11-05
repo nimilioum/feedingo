@@ -8,7 +8,7 @@ from rest_framework.mixins import RetrieveModelMixin, ListModelMixin
 from activity.views import LikeViewMixin, BookmarkViewMixin, CommentViewMixin
 from rss.services import RSSParser
 from .models import Feed, Article
-from .serializers import FeedSerializer, ArticleSerializer, FeedAddSerializer
+from .serializers import FeedSerializer, ArticleSerializer, FeedAddSerializer, FeedDetailSerializer
 from .permissions import FeedViewPermission
 
 
@@ -24,7 +24,13 @@ class FeedViewSet(ModelViewSet):
         if self.action == 'add':
             return FeedAddSerializer
 
+        if self.action == 'retrieve':
+            return FeedDetailSerializer
+
         return super().get_serializer_class()
+
+    def get_serializer_context(self):
+        return {'user': self.request.user}
 
     @action(detail=True, methods=['POST', ])
     def follow(self, request, pk=None):

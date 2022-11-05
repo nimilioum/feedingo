@@ -25,6 +25,9 @@ class Feed(models.Model):
     def unfollow(self, user: User):
         self.follows.remove(user)
 
+    def is_followed(self, user: User):
+        return Feed.objects.filter(follows=user, id=self.id).exists()
+
     def add_articles(self, articles):
         for article in articles:
             article.feed = self

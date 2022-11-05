@@ -1,4 +1,5 @@
-from rest_framework.serializers import Serializer, ModelSerializer, IntegerField, URLField
+from rest_framework.serializers import Serializer, ModelSerializer, IntegerField, \
+    URLField, SerializerMethodField
 from activity.serializers import CommentSerializer
 from .models import Feed, Article
 
@@ -18,7 +19,19 @@ class FeedSerializer(ModelSerializer):
         fields = '__all__'
 
     follows = IntegerField(source='follows_count', read_only=True)
+
+
+class FeedDetailSerializer(ModelSerializer):
+    class Meta:
+        model = Feed
+        fields = '__all__'
+
+    follows = IntegerField(source='follows_count', read_only=True)
+    is_followed = SerializerMethodField(read_only=True, source='is_followed')
     articles = ArticleSerializer(many=True, read_only=True, source='article_set')
+
+    def get_is_followed(self, obj):
+        return obj.is_followed(self.context.get('user'))
 
 
 class FeedAddSerializer(Serializer):

@@ -59,14 +59,18 @@ class FeedViewTestCase(APITestCase):
     def test_follow_feed(self):
         self.client.login(username=self.user1.username, password='randompassword')
         response = self.client.post(reverse('feeds-follow', kwargs={'pk': self.feeds[2].id}))
+        response2 = self.client.get(reverse('feeds-detail', kwargs={'pk': self.feeds[2].id}))
 
         self.assertEqual(response.status_code, 201)
+        self.assertTrue(response2.data['is_followed'])
 
     def test_unfollow_feed(self):
         self.client.login(username=self.user1.username, password='randompassword')
         response = self.client.delete(reverse('feeds-follow', kwargs={'pk': self.feeds[2].id}))
+        response2 = self.client.get(reverse('feeds-detail', kwargs={'pk': self.feeds[2].id}))
 
         self.assertEqual(response.status_code, 204)
+        self.assertFalse(response2.data['is_followed'])
 
     def test_followed_feeds(self):
         self.feeds[0].follow(self.user1)
